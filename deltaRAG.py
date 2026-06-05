@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
@@ -22,14 +22,22 @@ modelo = ChatOpenAI(
 
 embeddings = OpenAIEmbeddings(api_key=api_key)
 
-documento = TextLoader(
+arquivos = [
+    "documentos/GTB_gold_Nov23.pdf",
+    "documentos/GTB_platinum_Nov23.pdf",
     "documentos/GTB_standard_Nov23.pdf",
-    encoding="utf-8"
-).load()
+    "documentos/GTB_gold_Nov23.txt"
+]
+
+documentos = sum(
+    [
+        PyPDFLoader(arquivo).load() for arquivo in arquivos
+        ], []
+)
 
 pedacos = RecursiveCharacterTextSplitter(
     chunk_size=1000, chunk_overlap=100
-).split_documents(documento)
+).split_documents(documentos)
 
 dados_recuperados = FAISS.from_documents(
     pedacos, embeddings
@@ -53,4 +61,4 @@ def responder(pergunta:str):
         }
     )
 
-print(responder("Como devo proceder caso tenha um item roubado?"))
+print(responder("Como devo proceder caso tenha um item comprado roubado em cartoes gold?"))
